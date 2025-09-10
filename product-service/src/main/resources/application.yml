@@ -1,0 +1,22 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /product
+
+spring:
+  name: product-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 12345
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+
