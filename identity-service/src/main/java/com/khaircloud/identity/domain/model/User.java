@@ -33,6 +33,8 @@ public class User {
 
     String refreshToken;
 
+    String plan = "FREE";
+
     boolean isActive = true;
 
     @ManyToMany

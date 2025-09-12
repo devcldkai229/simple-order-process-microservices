@@ -1,0 +1,14 @@
+server:
+  port: 8079
+
+spring:
+  application:
+    name: api-gateway
+
+application:
+  prefix-route: /api
+
+services:
+  url:
+    identity-service: http://locahost:8080
+    product-service: http://locahost:8081
