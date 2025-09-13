@@ -2,15 +2,18 @@ package com.khaircloud.identity.application.service;
 
 import com.khaircloud.identity.application.dto.AuthResponse;
 import com.khaircloud.identity.application.dto.request.ClaimPayload;
+import com.khaircloud.identity.application.dto.request.IntrospectRequest;
 import com.khaircloud.identity.application.dto.request.LoginRequest;
 import com.khaircloud.identity.application.dto.request.RegisterRequest;
 import com.khaircloud.identity.application.dto.response.Authentication;
+import com.khaircloud.identity.application.dto.response.IntrospectResponse;
 import com.khaircloud.identity.common.exception.EmailAlreadyExistException;
 import com.khaircloud.identity.common.exception.ResourceNotExistException;
 import com.khaircloud.identity.domain.event.NotificationEvent;
 import com.khaircloud.identity.domain.model.User;
 import com.khaircloud.identity.infrastructure.aws.sns.VerifyEmailPublisher;
 import com.khaircloud.identity.infrastructure.repository.UserRepository;
+import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -20,6 +23,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.text.ParseException;
 import java.util.Base64;
 import java.util.UUID;
 
@@ -79,5 +83,16 @@ public class AuthService {
                         .refreshToken(refreshToken)
                         .build())
                 .build();
+    }
+
+    public IntrospectResponse introspect(IntrospectRequest request) {
+        boolean isValid = true;
+        try {
+            jwtService.verify(request.getToken());
+        } catch (ParseException | JOSEException e) {
+            isValid = false;
+        }
+
+        return IntrospectResponse.builder().isValid(isValid).build();
     }
 }

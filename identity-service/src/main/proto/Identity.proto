@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package identity;
+option java_multiple_files = true;
+option java_package = "com.khaircloud.identity.interfaces.grpc";
+
+service IdentityService {
+  rpc introspect(IntrospectRequest) returns (IntrospectResponse);
+}
+
+message IntrospectRequest {
+  string token = 1;
+}
+
+message IntrospectResponse {
+  bool isValid = 1;
+}
