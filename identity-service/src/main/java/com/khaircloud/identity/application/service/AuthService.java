@@ -88,14 +88,17 @@ public class AuthService {
 
     public ApiResponse<IntrospectResponse> introspect(IntrospectRequest request) {
         boolean isValid = true;
+        String userPlan = "";
         try {
-            jwtService.verify(request.getToken());
+            var jwt = jwtService.verify(request.getToken());
+            userPlan = jwt.getJWTClaimsSet().getClaim("plan").toString();
         } catch (ParseException | JOSEException e) {
             isValid = false;
         }
 
         return ApiResponse.<IntrospectResponse>builder().data(
                 IntrospectResponse.builder().isValid(isValid)
+                        .userPlan(userPlan)
                         .build()).build();
     }
 }

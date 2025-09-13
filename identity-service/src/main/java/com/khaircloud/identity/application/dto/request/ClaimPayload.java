@@ -16,5 +16,7 @@ public class ClaimPayload {
 
     String email;
 
+    String userPlan;
+
     Set<Role> role;
 }

@@ -1,5 +1,6 @@
 package com.khaircloud.gateway.service;
 
+import com.khaircloud.gateway.dto.ApiResponse;
 import com.khaircloud.gateway.dto.IntrospectRequest;
 import com.khaircloud.gateway.dto.IntrospectResponse;
 import com.khaircloud.gateway.interfaces.client.IdentityServiceClient;
@@ -15,11 +16,8 @@ import reactor.core.publisher.Mono;
 public class IdentityService {
     IdentityServiceClient client;
 
-    public Mono<Boolean> introspect(String token) {
+    public Mono<IntrospectResponse> introspect(String token) {
         return client.introspect(IntrospectRequest.builder().token(token).build())
-                .map(response -> {
-                    IntrospectResponse introspectResponse = response.getData();
-                    return introspectResponse != null && introspectResponse.isValid();
-                }).defaultIfEmpty(false);
+                .map(ApiResponse::getData);
     }
 }

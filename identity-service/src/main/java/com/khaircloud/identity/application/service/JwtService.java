@@ -43,6 +43,7 @@ public class JwtService {
                 ))
                 .claim("email", claims.getEmail())
                 .claim("scope", claims.getRole())
+                .claim("plan", claims.getUserPlan())
                 .build();
 
         JWSObject jwsObject = new JWSObject(header, new Payload(claimSet.toJSONObject()));

@@ -1,6 +1,5 @@
 package com.khaircloud.gateway.config;
 
-import com.khaircloud.gateway.client.IdentityClient;
 import com.khaircloud.gateway.interfaces.client.IdentityServiceClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

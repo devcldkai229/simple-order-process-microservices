@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,11 +21,10 @@ import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 
-@Order(-1)
 @Configuration
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = true)
-public class AuthenticationFilter implements GlobalFilter {
+public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     ObjectMapper objectMapper;
 
@@ -44,8 +44,12 @@ public class AuthenticationFilter implements GlobalFilter {
         if(headers.isEmpty()) return unauthenticated(exchange.getResponse());
 
         var token = headers.getFirst().replace("Bearer ", "");
-        return identityService.introspect(token).flatMap(isValid -> {
-            if(isValid) return chain.filter(exchange);
+        return identityService.introspect(token).flatMap(response -> {
+            if(response.isValid()) {
+                var mutatedExchange = exchange.mutate().request(r -> r.headers(
+                        header -> header.add("X-user-plan", response.getUserPlan()))).build();
+                return chain.filter(mutatedExchange);
+            }
             else return unauthenticated(exchange.getResponse());
         }).onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
     }
@@ -67,5 +71,10 @@ public class AuthenticationFilter implements GlobalFilter {
         } catch (JsonProcessingException exception) {
             throw new RuntimeException(exception);
         }
+    }
+
+    @Override
+    public int getOrder() {
+        return -1;
     }
 }

@@ -84,7 +84,7 @@ public class GatewayApplication {
     KeyResolver userKeyResolver() {
         return exchange -> Mono.justOrEmpty(
                 exchange.getRequest().getHeaders().getFirst("X-user-plan")
-        ).defaultIfEmpty("anonymous");
+        ).defaultIfEmpty("FREE");
     }
 
 	public static void main(String[] args) {
