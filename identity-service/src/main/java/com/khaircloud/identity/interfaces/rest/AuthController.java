@@ -1,9 +1,12 @@
 package com.khaircloud.identity.interfaces.rest;
 
+import com.khaircloud.identity.application.dto.ApiResponse;
 import com.khaircloud.identity.application.dto.AuthResponse;
+import com.khaircloud.identity.application.dto.request.IntrospectRequest;
 import com.khaircloud.identity.application.dto.request.LoginRequest;
 import com.khaircloud.identity.application.dto.request.RegisterRequest;
 import com.khaircloud.identity.application.dto.response.Authentication;
+import com.khaircloud.identity.application.dto.response.IntrospectResponse;
 import com.khaircloud.identity.application.service.AuthService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +35,12 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<AuthResponse<Authentication>> login(@RequestBody LoginRequest request) {
         AuthResponse<Authentication> res = authService.login(request);
+        return ResponseEntity.status(HttpStatus.OK).body(res);
+    }
+
+    @PostMapping("/introspect")
+    public ResponseEntity<ApiResponse<IntrospectResponse>> introspect(@RequestBody IntrospectRequest request) {
+        var res = authService.introspect(request);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
 

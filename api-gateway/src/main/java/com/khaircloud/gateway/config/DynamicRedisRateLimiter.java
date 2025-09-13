@@ -1,22 +1,18 @@
 package com.khaircloud.gateway.config;
 
 import com.khaircloud.gateway.service.UserPlanService;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
-
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 
 @Component
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class DynamicRedisRateLimiter extends RedisRateLimiter {
 
     UserPlanService userPlanService;
 
     public DynamicRedisRateLimiter(UserPlanService userPlanService) {
-        super(1, 1);
+        super(1, 1, 1);
         this.userPlanService = userPlanService;
     }
 

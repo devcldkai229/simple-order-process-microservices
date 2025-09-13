@@ -3,6 +3,7 @@ package com.khaircloud.gateway.config;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.khaircloud.gateway.dto.ApiResponse;
+import com.khaircloud.gateway.service.IdentityService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -22,10 +23,12 @@ import java.util.Arrays;
 @Order(-1)
 @Configuration
 @RequiredArgsConstructor
-@FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
+@FieldDefaults(level = AccessLevel.PACKAGE, makeFinal = true)
 public class AuthenticationFilter implements GlobalFilter {
 
     ObjectMapper objectMapper;
+
+    IdentityService identityService;
 
     public final String[] public_end_points = {
         "/auth/**"
@@ -41,9 +44,10 @@ public class AuthenticationFilter implements GlobalFilter {
         if(headers.isEmpty()) return unauthenticated(exchange.getResponse());
 
         var token = headers.getFirst().replace("Bearer ", "");
-
-
-        return null;
+        return identityService.introspect(token).flatMap(isValid -> {
+            if(isValid) return chain.filter(exchange);
+            else return unauthenticated(exchange.getResponse());
+        }).onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
     }
 
     Mono<Void> unauthenticated(ServerHttpResponse response) {

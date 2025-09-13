@@ -1,5 +1,6 @@
 package com.khaircloud.identity.application.service;
 
+import com.khaircloud.identity.application.dto.ApiResponse;
 import com.khaircloud.identity.application.dto.AuthResponse;
 import com.khaircloud.identity.application.dto.request.ClaimPayload;
 import com.khaircloud.identity.application.dto.request.IntrospectRequest;
@@ -85,7 +86,7 @@ public class AuthService {
                 .build();
     }
 
-    public IntrospectResponse introspect(IntrospectRequest request) {
+    public ApiResponse<IntrospectResponse> introspect(IntrospectRequest request) {
         boolean isValid = true;
         try {
             jwtService.verify(request.getToken());
@@ -93,6 +94,8 @@ public class AuthService {
             isValid = false;
         }
 
-        return IntrospectResponse.builder().isValid(isValid).build();
+        return ApiResponse.<IntrospectResponse>builder().data(
+                IntrospectResponse.builder().isValid(isValid)
+                        .build()).build();
     }
 }
