@@ -66,9 +66,10 @@ public class AuthService {
                         .plan("FREE")
                 .build());
 
-        kafkaTemplate.send("verify-account-register-notification", NotificationEvent.<User>builder()
+        kafkaTemplate.send("verify-account-register-notification", NotificationEvent.<String>builder()
+                .sender("")
                 .receiver(user.getEmail())
-                .body(user)
+                .body("")
                 .subject("Verify email account").build());
     }
 

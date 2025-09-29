@@ -7,11 +7,11 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
-@Document
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Document(collection = "notifications")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class Notification {
     @Id
@@ -23,9 +23,12 @@ public class Notification {
 
     String type;
 
-    String body;
+    String content;
+
+    String subject;
 
     boolean broadcast = false;
 
     LocalDateTime createdAt = LocalDateTime.now();
+
 }
