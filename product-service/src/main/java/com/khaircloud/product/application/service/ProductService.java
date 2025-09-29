@@ -9,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -24,6 +26,7 @@ public class ProductService {
 
     ProductRepository productRepository;
 
+    @CacheEvict(value = "products", allEntries = true)
     public ProductResponse createProduct(CreateProductRequest request) {
         var product = ProductMapper.toProduct(request);
         product = productRepository.save(product);
@@ -31,10 +34,16 @@ public class ProductService {
         return ProductMapper.toProductResponse(product);
     }
 
+    @Cacheable(value = "products", key = "innerProducts")
     public List<ProductResponse> getInnerProducts() {
         return productRepository.findAll().stream().map(ProductMapper::toProductResponse).toList();
     }
 
+    @Cacheable(
+            value = "products",
+            keyGenerator = "pageableKeyGenerator",
+            unless = "#result.isEmpty()"
+    )
     public Page<ProductResponse> getProducts(PageableRequest request) {
         Sort sorter = request.isDesc() ?
                 Sort.by(request.getSortBy()).descending() :

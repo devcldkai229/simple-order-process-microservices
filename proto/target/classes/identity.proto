@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package com.khaircloud.identity;
+
+option java_multiple_files = true;
+
+message IntrospectRequest {
+  string token = 1;
+}
+
+message IntrospectResponse {
+  bool isValid = 1;
+  string userPlan = 2;
+}
+
+service IdentityAuthService {
+  rpc introspect(IntrospectRequest) returns (IntrospectResponse);
+}
