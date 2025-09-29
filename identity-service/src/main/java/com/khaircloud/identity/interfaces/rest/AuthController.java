@@ -43,5 +43,4 @@ public class AuthController {
         var res = authService.introspect(request);
         return ResponseEntity.status(HttpStatus.OK).body(res);
     }
-
 }

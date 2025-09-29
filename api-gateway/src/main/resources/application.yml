@@ -25,6 +25,13 @@ spring:
       port: 6379
       timeout: 1s
 
+grpc:
+  client:
+    identity-service:
+      address: "localhost:5050"
+      negotiationType: plaintext
+      transportSecurity: PLAINTEXT_UPGRADE # must be using for window/mac
+
 application:
   prefix-route: /api
 
@@ -35,9 +42,10 @@ services:
 
 logging:
   level:
-    com:
-      khaircloud:
-        gateway: DEBUG
+    net.devh.boot.grpc.client: DEBUG  # Bật log gRPC client
+    io.grpc: DEBUG
+    com.khaircloud.gateway: DEBUG
+
   pattern:
     level: "%5p [${spring.application.name},%X{trace_id},%X{span_id}]"
 

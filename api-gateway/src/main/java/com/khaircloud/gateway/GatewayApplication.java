@@ -56,9 +56,9 @@ public class GatewayApplication {
                         )
                         .uri(identity_service_url)
                 )
-                .route(route -> route.path(application_route_api_prefix + "/product/**")
+                .route(route -> route.path(application_route_api_prefix + "/products/**")
                         .filters(routeFilter -> routeFilter
-                                .rewritePath(application_route_api_prefix + "/product/(?<segment>.*)", "/${segment}")
+                                .rewritePath(application_route_api_prefix + "/products/(?<segment>.*)", "/${segment}")
                                 .addResponseHeader("X-Response-Time", LocalDateTime.now().toString())
                                 .circuitBreaker(configCb -> configCb.setName("product-circuit-breaker")
                                         .setFallbackUri("forward:/contact-support"))

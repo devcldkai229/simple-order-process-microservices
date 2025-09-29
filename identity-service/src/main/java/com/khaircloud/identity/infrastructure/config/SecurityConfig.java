@@ -18,7 +18,7 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private static final String[] public_end_points = {
-            "/auth/register"
+            "/auth/*", "/roles/*"
     };
 
     @Autowired
@@ -27,7 +27,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain filterChain(HttpSecurity httpSecurity) throws Exception{
         httpSecurity.authorizeHttpRequests(request -> request
-                .requestMatchers(HttpMethod.POST, public_end_points)
+                .requestMatchers(public_end_points)
                 .permitAll().anyRequest().authenticated());
 
         httpSecurity.oauth2ResourceServer(httpSecurityOAuth2ResourceServerConfigurer ->

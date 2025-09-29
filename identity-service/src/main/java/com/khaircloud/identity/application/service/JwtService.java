@@ -2,6 +2,7 @@ package com.khaircloud.identity.application.service;
 
 import com.khaircloud.identity.application.dto.request.ClaimPayload;
 import com.khaircloud.identity.common.exception.UnauthorizeException;
+import com.khaircloud.identity.domain.model.User;
 import com.nimbusds.jose.*;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
@@ -11,11 +12,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
-import java.util.Base64;
-import java.util.Date;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -31,29 +31,26 @@ public class JwtService {
     protected long refreshDuration;
 
     public String generateAccessToken(ClaimPayload claims) {
-        JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
-
-        JWTClaimsSet claimSet = new JWTClaimsSet.Builder()
-                .subject(claims.getUserId())
-                .issuer("khaiir-cloud.com")
-                .issueTime(new Date())
-                .jwtID(UUID.randomUUID().toString())
-                .expirationTime(new Date(
-                        Instant.now().plusSeconds(validDuration).toEpochMilli()
-                ))
-                .claim("email", claims.getEmail())
-                .claim("scope", claims.getRole())
-                .claim("plan", claims.getUserPlan())
-                .build();
-
-        JWSObject jwsObject = new JWSObject(header, new Payload(claimSet.toJSONObject()));
-
         try {
-            jwsObject.sign(new MACSigner(singerKey.getBytes()));
+            JWSHeader header = new JWSHeader(JWSAlgorithm.HS512);
+            JWTClaimsSet claimSet = new JWTClaimsSet.Builder()
+                    .subject(claims.getUserId())
+                    .issuer("khaiir-cloud.com")
+                    .issueTime(new Date())
+                    .jwtID(UUID.randomUUID().toString())
+                    .expirationTime(Date.from(Instant.now().plusSeconds(validDuration)))
+                    .claim("email", claims.getEmail())
+                    .claim("plan", claims.getUserPlan())
+                    .claim("authorities", claims.getAuthorities())
+                    .build();
+
+            JWSObject jwsObject = new JWSObject(header, new Payload(claimSet.toJSONObject()));
+            jwsObject.sign(new MACSigner(singerKey.getBytes(StandardCharsets.UTF_8)));
+
             return jwsObject.serialize();
         } catch (JOSEException e) {
-            log.error("Cannot create token {}", e.getMessage());
-            throw new RuntimeException();
+            log.error("Cannot create token: {}", e.getMessage(), e);
+            throw new RuntimeException("Failed to generate access token", e);
         }
     }
 

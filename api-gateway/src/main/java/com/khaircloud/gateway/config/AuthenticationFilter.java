@@ -3,6 +3,7 @@ package com.khaircloud.gateway.config;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.khaircloud.gateway.dto.ApiResponse;
+import com.khaircloud.gateway.interfaces.client.IdentityGrpcClientService;
 import com.khaircloud.gateway.service.IdentityService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
 
     ObjectMapper objectMapper;
 
-    IdentityService identityService;
+    IdentityGrpcClientService grpcClientService;
 
     public final String[] public_end_points = {
         "/auth/**"
@@ -44,14 +45,15 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
         if(headers.isEmpty()) return unauthenticated(exchange.getResponse());
 
         var token = headers.getFirst().replace("Bearer ", "");
-        return identityService.introspect(token).flatMap(response -> {
-            if(response.isValid()) {
-                var mutatedExchange = exchange.mutate().request(r -> r.headers(
-                        header -> header.add("X-user-plan", response.getUserPlan()))).build();
-                return chain.filter(mutatedExchange);
-            }
-            else return unauthenticated(exchange.getResponse());
-        }).onErrorResume(throwable -> unauthenticated(exchange.getResponse()));
+        var responseIntrospect = grpcClientService.introspect(token);
+
+        if (responseIntrospect.isValid()) {
+            var mutatedExchange = exchange.mutate().request(r -> r.headers(
+                    header -> header.add("X-user-plan",
+                            responseIntrospect.getUserPlan()))).build();
+            return chain.filter(mutatedExchange);
+        }
+        return unauthenticated(exchange.getResponse());
     }
 
     Mono<Void> unauthenticated(ServerHttpResponse response) {

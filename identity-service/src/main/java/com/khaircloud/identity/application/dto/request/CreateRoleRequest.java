@@ -10,12 +10,9 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class ClaimPayload {
-    String userId;
+public class CreateRoleRequest {
 
-    String email;
+    String name;
 
-    String userPlan;
-
-    List<String> authorities;
+    List<String> permissions;
 }

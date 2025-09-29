@@ -8,9 +8,9 @@ import lombok.experimental.FieldDefaults;
 @NoArgsConstructor
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class NotificationEvent {
+public class NotificationEvent<T> {
     String sender;
     String receiver;
-    String body;
+    T body;
     String subject;
 }

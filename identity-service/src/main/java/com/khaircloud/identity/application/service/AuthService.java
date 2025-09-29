@@ -13,6 +13,7 @@ import com.khaircloud.identity.common.exception.ResourceNotExistException;
 import com.khaircloud.identity.domain.event.NotificationEvent;
 import com.khaircloud.identity.domain.model.User;
 import com.khaircloud.identity.infrastructure.aws.sns.VerifyEmailPublisher;
+import com.khaircloud.identity.infrastructure.repository.RoleRepository;
 import com.khaircloud.identity.infrastructure.repository.UserRepository;
 import com.nimbusds.jose.JOSEException;
 import lombok.AccessLevel;
@@ -25,8 +26,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.text.ParseException;
-import java.util.Base64;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @RequiredArgsConstructor
@@ -38,9 +38,11 @@ public class AuthService {
 
     UserRepository userRepository;
 
+    RoleRepository roleRepository;
+
     JwtService jwtService;
 
-    VerifyEmailPublisher verifyEmailPublisher;
+    KafkaTemplate<String, Object> kafkaTemplate;
 
     public void register(RegisterRequest request) {
         var existingUser = userRepository.findByEmail(request.getEmail());
@@ -49,16 +51,25 @@ public class AuthService {
             throw new EmailAlreadyExistException("Email already exist!");
         }
 
+        var userRole = roleRepository.findById("USER").orElseThrow(
+            () -> new RuntimeException("ROLE NOT ACCEPT!")
+        );
+
         var user = userRepository.save(User.builder()
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .verifyToken(Base64.getEncoder()
                         .encodeToString((System.currentTimeMillis()
                                 +UUID.randomUUID().toString()).substring(0,8).getBytes()))
+                        .roles(new HashSet<>(List.of(userRole)))
+                        .isActive(true)
+                        .plan("FREE")
                 .build());
 
-        verifyEmailPublisher.sendVerificationEmail(NotificationEvent.builder().receiver(user.getEmail()).build(),
-                user.getVerifyToken());
+        kafkaTemplate.send("verify-account-register-notification", NotificationEvent.<User>builder()
+                .receiver(user.getEmail())
+                .body(user)
+                .subject("Verify email account").build());
     }
 
     public AuthResponse<Authentication> login(LoginRequest request) {
@@ -71,7 +82,8 @@ public class AuthService {
 
         var accessToken = jwtService.generateAccessToken(ClaimPayload.builder().email(user.getEmail())
                 .userId(user.getId())
-                .role(user.getRoles())
+                .authorities(buildAuthorities(user))
+                .userPlan(user.getPlan())
                 .build());
         var refreshToken = jwtService.generateRefreshToken();
         user.setRefreshToken(refreshToken);
@@ -84,6 +96,17 @@ public class AuthService {
                         .refreshToken(refreshToken)
                         .build())
                 .build();
+    }
+
+    private List<String> buildAuthorities(User user) {
+        List<String> authorities = new ArrayList<>();
+        user.getRoles().forEach(role -> {
+            authorities.add("ROLE_" + role.getName());
+            role.getPermissions().forEach(permission ->
+                    authorities.add(permission.getName())
+            );
+        });
+        return authorities;
     }
 
     public ApiResponse<IntrospectResponse> introspect(IntrospectRequest request) {
